@@ -1,6 +1,7 @@
 import dbConnect from "@/lib/db/mongoose";
 import LoginData from "@/lib/models/LoginData";
 import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
   // Storing return response.
@@ -40,11 +41,13 @@ export async function POST(request: Request) {
       );
       return returnResponse;
     } else {
+      const hashedPassword = await bcrypt.hash(password, 10);
+
       // Saving userdata
       const saveData = new LoginData({
         username,
         email,
-        password,
+        password: hashedPassword,
       });
 
       saveData.save();
