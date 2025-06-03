@@ -1,12 +1,14 @@
 import mongoose from "mongoose";
 
-interface ILoginData extends mongoose.Document {
+interface IUserData extends mongoose.Document {
   username: string;
   email: string;
   password: string;
+  knowledgeLevel?: string[];
+  badges?: string[];
 }
 
-const LoginDataSchema = new mongoose.Schema<ILoginData>(
+const UserDataSchema = new mongoose.Schema<IUserData>(
   {
     username: {
       type: String,
@@ -22,9 +24,17 @@ const LoginDataSchema = new mongoose.Schema<ILoginData>(
       type: String,
       required: [true, "Password is required"],
     },
+    knowledgeLevel: {
+      type: [String],
+      default: [],
+    },
+    badges: {
+      type: [String],
+      default: [],
+    },
   },
-  { collection: "LoginData" }
+  { collection: "UserData" }
 );
 
-export default mongoose.models.LoginData ||
-  mongoose.model<ILoginData>("LoginData", LoginDataSchema);
+export default mongoose.models.UserData ||
+  mongoose.model<IUserData>("UserData", UserDataSchema);

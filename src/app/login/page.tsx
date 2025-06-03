@@ -2,6 +2,7 @@
 import { Dispatch, FormEvent, SetStateAction, useState } from "react";
 
 export default function Signup() {
+  // Variable
   const [formData, setFormData]: [
     formData: {
       username_email: string;
@@ -17,18 +18,28 @@ export default function Signup() {
     username_email: "",
     password: "",
   });
+  const [error, setError] = useState("");
 
+  // Handle submit
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    const submitData: FormData = new FormData();
-    submitData.append("username_email", formData.username_email);
-    submitData.append("password", formData.password);
+    const submitData = {
+      username_email: formData.username_email,
+      password: formData.password,
+    };
 
     const response: Response = await fetch("/api/login", {
       method: "POST",
-      body: submitData,
+      headers: {
+        "Content-Type": "application/jason",
+      },
+      body: JSON.stringify(submitData),
     });
+
+    const responseData = await response.json();
+
+    setError(responseData.error);
   }
 
   return (
@@ -45,7 +56,7 @@ export default function Signup() {
           className="border-2 border-white py-1 px-2 rounded-full"
           value={formData.username_email}
         />
-        \{/* Password */}
+        {/* Password */}
         <input
           name="password"
           type="password"
@@ -63,6 +74,9 @@ export default function Signup() {
         >
           Submit
         </button>
+
+        {/* Error message */}
+        {error && <p className="text-red-600">{error}</p>}
       </form>
     </div>
   );

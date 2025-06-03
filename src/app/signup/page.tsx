@@ -39,6 +39,9 @@ export default function Signup() {
     // Posting data and fetching response
     const response: Response = await fetch("/api/signup", {
       method: "POST",
+      headers: {
+        "Content-Type": "application/jason",
+      },
       body: JSON.stringify(submitFormData),
     });
     const responseData = await response.json();

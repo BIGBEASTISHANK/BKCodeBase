@@ -1,5 +1,5 @@
 import dbConnect from "@/lib/db/mongoose";
-import LoginData from "@/lib/models/LoginData";
+import UserData from "@/lib/models/UserData";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
@@ -25,8 +25,8 @@ export async function POST(request: Request) {
     }
 
     // If username or email already exist
-    const usernameExist = await LoginData.findOne({ username });
-    const emailExist = await LoginData.findOne({ email });
+    const usernameExist = await UserData.findOne({ username });
+    const emailExist = await UserData.findOne({ email });
 
     if (usernameExist) {
       returnResponse = NextResponse.json(
@@ -44,13 +44,13 @@ export async function POST(request: Request) {
       const hashedPassword = await bcrypt.hash(password, 10);
 
       // Saving userdata
-      const saveData = new LoginData({
+      const saveData = new UserData({
         username,
         email,
         password: hashedPassword,
       });
 
-      saveData.save();
+      await saveData.save();
 
       returnResponse = NextResponse.json(
         { success: "Login saved succesfully!" },
