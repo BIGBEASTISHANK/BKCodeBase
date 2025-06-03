@@ -4,6 +4,7 @@ interface IUserData extends mongoose.Document {
   username: string;
   email: string;
   password: string;
+  level: number;
   knowledgeLevel?: string[];
   badges?: string[];
 }
@@ -23,6 +24,10 @@ const UserDataSchema = new mongoose.Schema<IUserData>(
     password: {
       type: String,
       required: [true, "Password is required"],
+    },
+    level: {
+      type: Number,
+      default: 1,
     },
     knowledgeLevel: {
       type: [String],

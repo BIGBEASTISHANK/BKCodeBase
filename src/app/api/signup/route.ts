@@ -4,8 +4,10 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
-  // Storing return response.
+  // Return response variable
   let returnResponse;
+  let statusCode = 500;
+  let message = "Unknown";
 
   try {
     // Connect to database
@@ -15,54 +17,99 @@ export async function POST(request: Request) {
     const requestData = await request.json();
     const { username, email, password } = requestData;
 
-    // Making sure every field is filled
-    if (!username || !email || !password) {
+    // Input validation with length limits
+    if (
+      !username ||
+      !email ||
+      !password ||
+      username.length > 50 ||
+      email.length > 254 ||
+      password.length > 128
+    ) {
+      statusCode = 400;
+      message = "Invalid input fields";
       returnResponse = NextResponse.json(
-        { error: "Every field is required!" },
-        { status: 400 }
+        { error: message },
+        { status: statusCode }
       );
       return returnResponse;
     }
 
-    // If username or email already exist
-    const usernameExist = await UserData.findOne({ username });
-    const emailExist = await UserData.findOne({ email });
+    // Removing whitespace from inputs
+    const trimmedUsername = username.trim();
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
 
-    if (usernameExist) {
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      statusCode = 400;
+      message = "Invalid email format";
       returnResponse = NextResponse.json(
-        { error: "Username already exist in system!" },
-        { status: 400 }
-      );
-      return returnResponse;
-    } else if (emailExist) {
-      returnResponse = NextResponse.json(
-        { error: "Email already exist in system!" },
-        { status: 400 }
-      );
-      return returnResponse;
-    } else {
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      // Saving userdata
-      const saveData = new UserData({
-        username,
-        email,
-        password: hashedPassword,
-      });
-
-      await saveData.save();
-
-      returnResponse = NextResponse.json(
-        { success: "Login saved succesfully!" },
-        { status: 200 }
+        { error: message },
+        { status: statusCode }
       );
       return returnResponse;
     }
-  } catch (err) {
+
+    // Password strength validation
+    if (trimmedPassword.length < 8) {
+      statusCode = 400;
+      message = "Password must be at least 8 characters long";
+      returnResponse = NextResponse.json(
+        { error: message },
+        { status: statusCode }
+      );
+      return returnResponse;
+    }
+
+    // Check if username or email already exist
+    const existingUser = await UserData.findOne({
+      $or: [{ username: trimmedUsername }, { email: trimmedEmail }],
+    });
+
+    if (existingUser) {
+      statusCode = 409;
+      message = "Username or email already exists";
+      returnResponse = NextResponse.json(
+        { error: message },
+        { status: statusCode }
+      );
+      return returnResponse;
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(trimmedPassword, 12);
+
+    // Save user data
+    const saveData = new UserData({
+      username: trimmedUsername,
+      email: trimmedEmail,
+      password: hashedPassword,
+    });
+
+    await saveData.save();
+
+    statusCode = 201;
+    message = "Account created successfully";
     returnResponse = NextResponse.json(
-      { error: "Unknown Error: " + err },
-      { status: 500 }
+      { success: message },
+      { status: statusCode }
     );
     return returnResponse;
+  } catch (err) {
+    // Log error and return server error response
+    console.error("Signup error:", err);
+    statusCode = 500;
+    message = "Internal server error";
+
+    returnResponse = NextResponse.json(
+      { error: message },
+      { status: statusCode }
+    );
+    return returnResponse;
+  } finally {
+    console.log("Status Returned: " + statusCode);
+    console.log("Message Returned: " + message);
   }
 }
