@@ -2,6 +2,7 @@ import dbConnect from "@/lib/db/mongoose";
 import UserData from "@/lib/models/UserData";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 export async function POST(request: Request) {
   // Return response variable
@@ -96,6 +97,27 @@ export async function POST(request: Request) {
       { success: message },
       { status: statusCode }
     );
+
+    const userDBData = await UserData.findOne({ username: trimmedUsername });
+
+    // Storing login info in cookie
+    const token = jwt.sign(
+      {
+        id: userDBData._id.toString(),
+      },
+      process.env.JWT_SECRET as string,
+      { expiresIn: "7d" }
+    );
+
+    // Set HTTP-only cookie
+    returnResponse.cookies.set("token", token, {
+      httpOnly: true,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+    });
+
     return returnResponse;
   } catch (err) {
     // Log error and return server error response

@@ -37,7 +37,6 @@ export async function GET(request: NextRequest) {
 
     // Find user by ID from token
     const user = await UserData.findById(decoded.id).select("-password");
-    console.log(user);
 
     if (!user) {
       statusCode = 404;

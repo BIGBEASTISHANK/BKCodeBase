@@ -2,6 +2,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { courseName } from "@@/data/CourseData";
 
 export default function Dashboard() {
   const [user, setUser] = useState({
@@ -9,7 +10,7 @@ export default function Dashboard() {
     username: "",
     level: 0,
     badges: [""],
-    knowledgeLevel: [""],
+    knowledgeLevel: [{ courseId: 0, progress: 0 }],
   });
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -164,9 +165,13 @@ export default function Dashboard() {
               {user.knowledgeLevel && (
                 <div className="flex justify-between">
                   <span className="text-gray-400">Level: {user.level}</span>
-                  <span className="text-green-400 font-medium">
-                    {user.knowledgeLevel}
-                  </span>
+                  <div className="flex flex-col">
+                    {user.knowledgeLevel.map((data, index) => (
+                      <span className="text-green-400 font-medium" key={index}>
+                        {courseName[data.courseId]}: {data.progress}%
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
               {user.badges && user.badges.length > 0 && (
